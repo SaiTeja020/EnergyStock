@@ -4,9 +4,16 @@ import numpy as np
 class OpenEnvClient:
     def __init__(self, base_url="http://127.0.0.1:8000"):
         self.base_url = base_url
+<<<<<<< HEAD
 
     def reset(self, seed=None, task="hard"):
         response = requests.post(
+=======
+        self.session = requests.Session()  # Reuse TCP connection — prevents Windows port exhaustion
+
+    def reset(self, seed=None, task="hard"):
+        response = self.session.post(
+>>>>>>> e312b64 (initial BESS-RL commit)
             f"{self.base_url}/reset",
             json={"seed": seed, "task": task}
         )
@@ -22,7 +29,11 @@ class OpenEnvClient:
         else:
             action_val = [float(action)] * 3
             
+<<<<<<< HEAD
         response = requests.post(
+=======
+        response = self.session.post(
+>>>>>>> e312b64 (initial BESS-RL commit)
             f"{self.base_url}/step",
             json={"action": action_val}
         )

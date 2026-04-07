@@ -91,10 +91,48 @@ def visualize(args):
             
         x_range = np.arange(len(history["soc"]))
         
+<<<<<<< HEAD
         # 1. Battery SOC
         axes[0].plot(x_range, history["soc"], color='blue')
         axes[0].set_title("Battery SOC (Day 252)", fontsize=14)
         axes[0].set_ylabel("SOC (%)")
+=======
+        # 1. Battery SOC vs Time — detailed annotated chart
+        soc_arr = np.array(history["soc"])
+        lmp_arr = np.array(history["lmp"])
+        hours   = np.arange(len(soc_arr))
+
+        # Color fill: green when charging (SOC rising), red when discharging
+        for i in range(1, len(hours)):
+            color = '#27ae60' if soc_arr[i] >= soc_arr[i-1] else '#e74c3c'
+            axes[0].fill_between([hours[i-1], hours[i]], [soc_arr[i-1], soc_arr[i]], alpha=0.35, color=color)
+
+        axes[0].plot(hours, soc_arr, color='#2980b9', linewidth=1.2, label='SOC', zorder=3)
+
+        # 20% minimum reserve threshold
+        axes[0].axhline(0.20, color='#f39c12', linestyle='--', linewidth=1.0, alpha=0.8, label='20% Reserve')
+
+        # Day boundary markers (every 24 hours)
+        for day in range(1, len(soc_arr) // 24 + 1):
+            axes[0].axvline(day * 24, color='white', linewidth=0.5, alpha=0.4, linestyle=':')
+
+        # LMP overlay on secondary y-axis
+        ax_soc_twin = axes[0].twinx()
+        ax_soc_twin.plot(hours, lmp_arr, color='#f1c40f', linewidth=0.8, alpha=0.5, label='LMP')
+        ax_soc_twin.set_ylabel('LMP ($/MWh)', color='#f1c40f', fontsize=9)
+        ax_soc_twin.tick_params(axis='y', labelcolor='#f1c40f')
+
+        axes[0].set_title('Battery State of Charge vs Time', fontsize=13, fontweight='bold')
+        axes[0].set_ylabel('SOC (0–1)', color='#2980b9')
+        axes[0].set_xlabel('Hour of Episode')
+        axes[0].set_ylim(0, 1.05)
+        axes[0].tick_params(axis='y', labelcolor='#2980b9')
+
+        # Combined legend
+        lines_soc  = axes[0].get_lines() + ax_soc_twin.get_lines()
+        labels_soc = [l.get_label() for l in lines_soc]
+        axes[0].legend(lines_soc, labels_soc, loc='upper left', fontsize=8)
+>>>>>>> e312b64 (initial BESS-RL commit)
         
         # 2. Energy Arbitrage - LMP on left axis, action on right axis
         axes[1].plot(x_range, history["lmp"], color='orange', label="LMP ($)")

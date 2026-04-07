@@ -1,0 +1,43 @@
+networks:
+  bess-net:
+    driver: bridge
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./train/models:/app/bess_rl/train/models
+      - ./data:/app/bess_rl/data
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-1.5-flash}
+      - LLM_PROVIDER=${LLM_PROVIDER:-GEMINI}
+      - HF_TOKEN=${HF_TOKEN}
+      - HF_MODEL=${HF_MODEL:-google/gemma-2-9b-it}
+      - PORT=8000
+    networks:
+      - bess-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  frontend:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - bess-net
+    restart: unless-stopped
