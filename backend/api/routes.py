@@ -14,7 +14,7 @@ if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
 from bess_rl.agent.config import AgentConfig
-from bess_rl.agent.actor_critic import TDD_ND_Agent
+from bess_rl.agent.actor_critic import SAC_Agent
 from bess_rl.openenv.server.env import BESSEnvironment
 from bess_rl.openenv.models import ActionModel
 
@@ -24,9 +24,9 @@ _DATA_PATH = os.path.join(_ROOT, "data", "pjm_data.csv")
 _MODELS_DIR = os.path.join(_ROOT, "train", "models")
 
 
-def _load_agent(model_base: str) -> TDD_ND_Agent:
+def _load_agent(model_base: str) -> SAC_Agent:
     config = AgentConfig()
-    agent = TDD_ND_Agent(config)
+    agent = SAC_Agent(config)
     if os.path.exists(model_base + "_actor.pth"):
         agent.load(model_base)
     return agent

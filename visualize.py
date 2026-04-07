@@ -13,7 +13,7 @@ if _ROOT not in sys.path:
 
 from openenv.client import OpenEnvClient
 from agent.config import AgentConfig
-from agent.actor_critic import SAC_Agent as TDD_ND_Agent
+from agent.actor_critic import SAC_Agent
 
 def start_server():
     import requests
@@ -46,7 +46,7 @@ def visualize(args):
         config = AgentConfig()
         client = OpenEnvClient(base_url="http://127.0.0.1:8000")
         
-        agent = TDD_ND_Agent(config)
+        agent = SAC_Agent(config)
         
         # Auto-detect trained models from the train/models/ directory
         model_path = args.model_path if args.model_path else os.path.join(_ROOT, "train", "models", f"best_model_{args.task}")

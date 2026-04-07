@@ -89,7 +89,8 @@ def _build_prompt(data: dict) -> str:
     scores = data.get("scores", {})
     return f"""You are an expert in reinforcement learning for grid-scale energy storage systems.
 Analyse the following BESS-RL (Battery Energy Storage System – Reinforcement Learning) agent
-evaluation results and return a thorough, actionable JSON assessment.
+evaluation results. The agent uses a Soft Actor-Critic (SAC) stochastic architecture.
+Return a thorough, actionable JSON assessment.
 
 == EVALUATION CONTEXT ==
 Task        : {task} — {TASK_DESCRIPTIONS.get(task, '')}

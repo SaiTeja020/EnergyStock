@@ -9,7 +9,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 from openenv.client import OpenEnvClient
 from agent.config import AgentConfig
-from agent.actor_critic import SAC_Agent as TDD_ND_Agent
+from agent.actor_critic import SAC_Agent
 
 
 def start_server():
@@ -46,7 +46,7 @@ def start_server():
 
 def evaluate_model(client, model_path, task, seeds):
     config = AgentConfig()
-    agent = TDD_ND_Agent(config)
+    agent = SAC_Agent(config)
 
     # if os.path.exists(model_path + "_actor.pth"):
     #     agent.load(model_path)

@@ -167,5 +167,3 @@ class SAC_Agent:
         if os.path.exists(filename + "_alpha.pth"):
             self.log_alpha = torch.load(filename + "_alpha.pth")
 
-# Alias for backwards compatibility or naming consistency
-TDD_ND_Agent = SAC_Agent

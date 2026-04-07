@@ -17,7 +17,7 @@ _MODELS_DIR = os.path.join(os.path.dirname(__file__), 'models')
 from openenv.client import OpenEnvClient
 from agent.config import AgentConfig
 from agent.replay_buffer import ReplayBuffer
-from agent.actor_critic import SAC_Agent as TDD_ND_Agent # Alias for compatibility
+from agent.actor_critic import SAC_Agent
 
 def start_server():
     import requests
@@ -50,7 +50,7 @@ def train(args):
         config = AgentConfig()
         client = OpenEnvClient(base_url="http://127.0.0.1:8000")
         
-        agent = TDD_ND_Agent(config)
+        agent = SAC_Agent(config)
         
         load_path = args.load_model if args.load_model else os.path.join(_MODELS_DIR, f"best_model_{args.task}")
         

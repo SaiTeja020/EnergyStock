@@ -63,7 +63,8 @@ def export_to_safetensors(task_args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--task", type=str, required=True, choices=["easy", "medium", "hard", "all"], help="Specify a tier, or 'all' to pack them all into one master file.")
+    parser.add_argument("--task", type=str, default="all", choices=["easy", "medium", "hard", "all"], 
+                        help="Specify a tier, or 'all' (default) to pack them into one master file.")
     args = parser.parse_args()
     
     export_to_safetensors(args.task)
