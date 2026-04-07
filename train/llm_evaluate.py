@@ -10,7 +10,7 @@ if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
 # Import evaluation logic
-from train.evaluate import evaluate_model, score_model, OpenEnvClient
+from train.evaluate import evaluate_model, score_model, OpenEnvClient, start_server
 from backend.api.llm_evaluator import get_llm_analysis
 
 def main():
@@ -26,41 +26,38 @@ def main():
     model_name = args.model if args.model else f"best_model_{args.task}"
     model_path = os.path.join(_ROOT, "train", "models", model_name)
     
-    # Initialize Client
+    # Initialize Client and Server
+    server_process = start_server()
     client = OpenEnvClient(base_url="http://127.0.0.1:8000")
     
     try:
-        # Check if server is up
-        import requests
-        requests.get("http://127.0.0.1:8000/api/health", timeout=2)
-    except:
-        print("Error: Backend server not detected at http://127.0.0.1:8000")
-        sys.exit(1)
+        eval_seeds = list(range(300, 300 + args.seeds))
+        results = evaluate_model(client, model_path, args.task, eval_seeds)
+        scores, overall = score_model(results, args.task)
+        
+        # Prepare data for LLM
+        llm_input = {
+            **results,
+            "task": args.task,
+            "model_name": model_name,
+            "num_seeds": args.seeds,
+            "scores": {**scores, "overall": overall}
+        }
 
-    eval_seeds = list(range(300, 300 + args.seeds))
-    results = evaluate_model(client, model_path, args.task, eval_seeds)
-    scores, overall = score_model(results, args.task)
-    
-    # Prepare data for LLM
-    llm_input = {
-        **results,
-        "task": args.task,
-        "model_name": model_name,
-        "num_seeds": args.seeds,
-        "scores": {**scores, "overall": overall}
-    }
+        # Call LLM Evaluator
+        analysis = get_llm_analysis(llm_input)
 
-    # Call LLM Evaluator
-    analysis = get_llm_analysis(llm_input)
-
-    # OUTPUT: Only Score and Verdict as requested
-    final_score = analysis.get('score', overall)
-    verdict = analysis.get('verdict', 'N/A')
-    
-    # print(f"Overall Score (AI Evaluated): {final_score:.3f}")
-    provider = analysis.get('provider', 'AI')
-    print(f"Overall Score ({provider} Evaluated): {final_score:.3f}")
-    print(f"AI Verdict: {verdict}")
+        # OUTPUT: Only Score and Verdict as requested
+        final_score = analysis.get('score', overall)
+        verdict = analysis.get('verdict', 'N/A')
+        
+        # print(f"Overall Score (AI Evaluated): {final_score:.3f}")
+        provider = analysis.get('provider', 'AI')
+        print(f"Overall Score ({provider} Evaluated): {final_score:.3f}")
+        print(f"AI Verdict: {verdict}")
+    finally:
+        if server_process:
+            server_process.terminate()
 
 if __name__ == "__main__":
     main()

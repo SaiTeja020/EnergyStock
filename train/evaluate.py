@@ -5,29 +5,37 @@ import subprocess
 import argparse
 import numpy as np
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from bess_rl.openenv.client import OpenEnvClient
-from bess_rl.agent.config import AgentConfig
-from bess_rl.agent.actor_critic import TDD_ND_Agent
+from openenv.client import OpenEnvClient
+from agent.config import AgentConfig
+from agent.actor_critic import SAC_Agent as TDD_ND_Agent
 
 
 def start_server():
     import requests
+    _PYROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    # Check if a server is already running (e.g. from Docker or trainer)
+    try:
+        r = requests.get("http://127.0.0.1:8000/api/health", timeout=1)
+        if r.status_code == 200:
+            return None   # use existing server silently
+    except Exception:
+        pass
+
+    log_file = open(os.path.join(os.path.dirname(__file__), "server_eval.log"), "w")
     env_vars = os.environ.copy()
-    env_vars["PYTHONPATH"] = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-    log_file = open("server_eval.log", "w")
+    env_vars["PYTHONPATH"] = _PYROOT
     server_process = subprocess.Popen(
-        ["uvicorn", "bess_rl.openenv.server.app:app", "--port", "8000", "--log-level", "warning"],
+        [sys.executable, os.path.join(_PYROOT, "backend", "main.py")],
         env=env_vars, stdout=log_file, stderr=log_file
     )
     # Poll until server is ready (up to 20 seconds)
-    for attempt in range(20):
+    for _ in range(20):
         time.sleep(1)
         try:
-            r = requests.get("http://127.0.0.1:8000/docs", timeout=1)
-            if r.status_code < 500:
-                # print(f"  Server ready after {attempt+1}s")
+            r = requests.get("http://127.0.0.1:8000/api/health", timeout=1)
+            if r.status_code == 200:
                 break
         except Exception:
             pass
@@ -61,7 +69,8 @@ def evaluate_model(client, model_path, task, seeds):
         prev_soc = None
 
         while not done:
-            action = np.clip(agent.select_action(np.array(state)), -config.max_action, config.max_action)
+            # Use evaluate=True for deterministic evaluation logic
+            action = np.clip(agent.select_action(np.array(state), evaluate=True), -config.max_action, config.max_action)
             next_state, reward, terminated, truncated, info = client.step(action)
 
             ep_reward += reward
@@ -171,7 +180,7 @@ if __name__ == "__main__":
     client = OpenEnvClient(base_url="http://127.0.0.1:8000")
 
     for task in tasks:
-        model_path = f"models/best_model_{task}"
+        model_path = os.path.join(os.path.dirname(__file__), "models", f"best_model_{task}")
         print(f"Evaluating [{task.upper()}] model on {len(eval_seeds)} seeds...")
         results = evaluate_model(client, model_path, task, eval_seeds)
         scores, overall = score_model(results, task)
