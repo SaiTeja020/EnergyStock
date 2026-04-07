@@ -1,6 +1,6 @@
 import numpy as np
-from bess_rl.openenv.models import BatteryConfig, ObservationModel, ActionModel, StepResult
-from bess_rl.data.pjm_dataminer import load_or_generate_data
+from openenv.models import BatteryConfig, ObservationModel, ActionModel, StepResult
+from data.pjm_dataminer import load_or_generate_data
 
 class BESSEnvironment:
     """

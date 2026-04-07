@@ -1,103 +1,154 @@
-# BESS-RL Platform ⚡
+# ⚡ BESS-RL: Battery Energy Storage System RL Environment
 
-Advanced Reinforcement Learning platform for **Battery Energy Storage System (BESS)** co-optimization. This project enables researchers and engineers to train, evaluate, and visualize RL agents performing Energy Arbitrage, Frequency Regulation, and Peak Shaving.
+[![HF Space](https://img.shields.io/badge/🤗%20Space-EnergyStock-blue)](https://huggingface.co/spaces/saiteja020/EnergyStock)
+[![OpenEnv](https://img.shields.io/badge/OpenEnv-Compliant-green)](https://openenv.ai)
 
-![BESS Visualization Mockup](https://raw.githubusercontent.com/lucide-react/lucide/main/icons/zap.svg)
-
-## 🏗️ Architecture
-
-The platform is built as a modular, dockerized full-stack application:
-
-*   **Backend**: FastAPI (Python) executing high-performance RL environments and agents.
-*   **Frontend**: React (Vite) dashboard with real-time Recharts telemetry.
-*   **AI Engine**: Gemini 2.5 Flash for automated agent performance analysis and grading.
-*   **Environment**: OpenEnv-compliant BESS simulation based on PJM market data.
+A real-world, OpenEnv-compliant reinforcement learning environment for **Battery Energy Storage System (BESS)** dispatch optimization. An agent controls a grid-scale battery to co-optimize three simultaneous revenue streams using real PJM electricity market data.
 
 ---
 
-## 🚀 Quick Start
+## What the Environment Does
 
-### 1. Prerequisites
-*   [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
-*   (Optional) Python 3.10+ for local training.
+The environment simulates hourly operation of a BESS connected to the PJM grid. At each timestep, the agent decides how much to charge or discharge across three objectives:
 
-### 2. Configuration
-The platform requires a Gemini API key for the AI Evaluation feature.
-1. Copy the template: `cp .env.example .env`
-2. Open `.env` and enter your `GEMINI_API_KEY`.
+1. **Energy Arbitrage (EA):** Buy electricity when prices are low, sell when high.
+2. **Frequency Regulation (FR):** Follow the PJM RegD signal to earn ancillary service revenue.
+3. **Peak Shaving (PS):** Reduce net grid load below a threshold to avoid demand charge penalties.
 
-### 3. Launch
-Deploy the entire stack with a single command:
+The reward function gives **dense partial-progress signals** so agents can learn gradually — a small arbitrage win is rewarded even without full FR compliance.
+
+---
+
+## Tasks
+
+| Task | Objectives | Description |
+|------|-----------|-------------|
+| `easy` | EA only | Learn price-arbitrage timing on PJM LMP data |
+| `medium` | EA + FR | Add frequency regulation signal tracking |
+| `hard` | EA + FR + PS | Full multi-objective co-optimization |
+
+All tasks run for up to **720 hourly steps** (30 days of PJM data). Each task returns a **normalized score in [0.0, 1.0]**.
+
+---
+
+## Action Space
+
+A continuous vector of **3 values**, each in `[-1.0, 1.0]`:
+
+| Index | Name | Description |
+|-------|------|-------------|
+| 0 | `a_PS` | Peak Shaving dispatch signal |
+| 1 | `a_EA` | Energy Arbitrage dispatch signal |
+| 2 | `a_FR` | Frequency Regulation dispatch signal |
+
+`+1.0` = full charge, `-1.0` = full discharge. The environment combines them via `clip(a_PS + a_EA + a_FR, -1, 1)`.
+
+---
+
+## Observation Space
+
+A **6-dimensional** float vector returned after each `reset()` and `step()`:
+
+| Field | Type | Range | Description |
+|-------|------|-------|-------------|
+| `hour_of_day` | float | 0–23 | Current hour |
+| `soc` | float | 0.0–1.0 | Battery State of Charge |
+| `price_lmp` | float | ~0–200 | Locational Marginal Price ($/MWh) |
+| `p_avg` | float | ~0–200 | 24-hour rolling average LMP ($/MWh) |
+| `freq_regd` | float | -1.0–1.0 | PJM RegD frequency regulation signal |
+| `load_mw` | float | ~0–50 | Grid load (MW) |
+
+---
+
+## Setup
+
 ```bash
-docker compose up --build
+# Clone the repo
+git clone https://github.com/SaiTeja020/EnergyStock
+cd EnergyStock
+
+# Install dependencies
+pip install -r backend/requirements.txt
+pip install openai torch numpy pandas pydantic
 ```
 
-Access the dashboard at: **[http://localhost:3000](http://localhost:3000)**
-
----
-
-## ✨ Features
-
-### 💻 Interactive Dashboard
-A high-fidelity telemetry interface built for battery operational awareness.
-*   **Live Charts**: Monitor State of Charge (SOC), Locational Marginal Pricing (LMP), Frequency Regulation signals, and Grid Load.
-*   **Task Selection**: Toggle between task complexities:
-    *   **Easy**: Energy Arbitrage only.
-    *   **Medium**: EA + Frequency Regulation.
-    *   **Hard**: EA + FR + Peak Shaving.
-*   **Scenario Seeding**: Deterministic evaluation on specific PJM data subsets.
-
-### 🤖 Gemini AI Evaluator
-Automated expert grading of RL agents using **Gemini 2.5 Flash**.
-*   **Operational Verdicts**: Qualitative assessment of agent behavior (e.g., "Good", "Needs Improvement").
-*   **Strengths & Weaknesses**: Identification of specific failure modes (e.g., "Aggressive cycling", "Poor SOC management during peaks").
-*   **Actionable Recommendations**: Technical suggestions for reward shaping or architecture tuning.
-
-### 🏋️ RL Training Toolkit
-The underlying engine supports the **TDD-ND (Triplet Deep Deterministic with Noise Decay)** algorithm.
-*   **Delayed Policy Updates**: For stable learning.
-*   **Triplet Critics**: To mitigate overestimation bias in complex reward landscapes.
-*   **Customizable Rewards**: Physics-informed degradation costs and market-driven incentives.
-
----
-
-## 📂 Project Structure
-
-```text
-bess_rl/
-├── agent/            # RL Algorithm (Actor-Critic, Replay Buffer)
-├── backend/          # FastAPI API Layer & Docker deployment
-│   ├── api/          # LLM Evaluator & Frontend Routes
-│   └── Dockerfile    # CPU-optimized Python image
-├── data/             # PJM Market Scenarios (CSV)
-├── frontend/         # React Dashboard (Vite + Recharts)
-│   ├── src/          # Components, Pages, and API Client
-│   └── Dockerfile    # Nginx-packaged frontend
-├── openenv/          # Battery Simulator (Physics & Rewards)
-├── train/            # Training & Eval scripts (Python entrypoints)
-├── docker-compose.yml # Service orchestration
-└── .env.example      # Environment variables template
+Create a `.env` file from the template:
+```bash
+cp .env.example .env
+# Edit .env and fill in your API keys
 ```
 
 ---
 
-## 🔧 Troubleshooting (Common Setup Issues)
+## Running the Server
 
-### Docker Connection Error
-If you see `error during connect: Get "...": open //./pipe/...: The system cannot find the file specified`:
-*   **Ensure Docker Desktop is running**.
-*   On Windows, make sure you've enabled the **WSL 2 based engine** in Docker settings.
-*   Try restarting the Docker Desktop service.
+```bash
+# Start the OpenEnv-compatible FastAPI server
+python backend/main.py
+# Server runs at http://localhost:8000
+# Docs at http://localhost:8000/docs
+```
 
-### API Connection Denied
-If the frontend shows "Backend Offline":
-*   Check if port 8000 is occupied by another process.
-*   Verify the `backend` container status: `docker compose ps`.
+**Endpoints:**
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/reset` | Reset environment, returns initial observation |
+| `POST` | `/step` | Advance one timestep |
+| `GET` | `/state` | Get current observation |
+| `GET` | `/info` | Session metadata |
 
 ---
 
-## 📜 License
-This project is for educational and research purposes.
+## Running Inference
+
+```bash
+# Set required environment variables
+export API_BASE_URL="https://router.huggingface.co/v1"
+export MODEL_NAME="Qwen/Qwen2.5-72B-Instruct"
+export HF_TOKEN="hf_your_token_here"
+
+# Run the inference script
+python inference.py
+```
+
+**Expected output format:**
+```
+[START] task=easy env=bess-rl model=Qwen/Qwen2.5-72B-Instruct
+[STEP] step=1 action=[0.12, -0.45, 0.33] reward=142.50 done=false error=null
+[STEP] step=2 action=[0.08, -0.51, 0.29] reward=198.20 done=false error=null
+...
+[END] success=true steps=168 score=0.47 rewards=142.50,198.20,...
+```
 
 ---
-*Created with ❤️ for Advanced Agentic Coding.*
+
+## Required Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `API_BASE_URL` | The API endpoint for the LLM (OpenAI-compatible) |
+| `MODEL_NAME` | The model identifier to use for inference |
+| `HF_TOKEN` | Your Hugging Face API key |
+
+---
+
+## Training Your Own Agent
+
+```bash
+# Train for all 3 task difficulties
+python train/trainer.py --task easy --episodes 150
+python train/trainer.py --task medium --episodes 300
+python train/trainer.py --task hard --episodes 500
+```
+
+Model weights are saved to `train/models/`.
+
+---
+
+## Architecture
+
+- **Agent:** Soft Actor-Critic (SAC) with Twin Critics and automatic entropy tuning
+- **Environment:** Custom OpenEnv-compliant BESS simulation on PJM market data
+- **Data:** Real PJM hourly LMP, RegD signal, and load data (auto-downloaded)
+- **Export:** Models packaged as `.safetensors` for Hugging Face Hub distribution

@@ -1,0 +1,53 @@
+name: bess-rl
+version: "1.0"
+description: >
+  Battery Energy Storage System (BESS) multi-objective reinforcement learning
+  environment. Co-optimizes Energy Arbitrage, Frequency Regulation, and Peak
+  Shaving on real PJM market data using a Soft Actor-Critic (SAC) agent.
+
+server:
+  host: "0.0.0.0"
+  port: 8000
+
+tasks:
+  - id: easy
+    description: "Energy Arbitrage only - learn to buy low and sell high on the PJM energy market."
+    max_steps: 720
+  - id: medium
+    description: "Energy Arbitrage + Frequency Regulation - co-optimize market profit with grid stability."
+    max_steps: 720
+  - id: hard
+    description: "Energy Arbitrage + Frequency Regulation + Peak Shaving - full multi-objective BESS co-optimization."
+    max_steps: 720
+
+action:
+  type: array
+  description: "Continuous actions [a_PS, a_EA, a_FR] each in range [-1.0, 1.0]"
+  items:
+    type: number
+    minimum: -1.0
+    maximum: 1.0
+  minItems: 3
+  maxItems: 3
+
+observation:
+  type: object
+  properties:
+    hour_of_day:
+      type: number
+      description: "Hour of day (0-23)"
+    soc:
+      type: number
+      description: "State of Charge normalized (0.0-1.0)"
+    price_lmp:
+      type: number
+      description: "Locational Marginal Price in $/MWh"
+    p_avg:
+      type: number
+      description: "24-hour rolling average LMP in $/MWh"
+    freq_regd:
+      type: number
+      description: "Frequency regulation signal (-1.0 to 1.0)"
+    load_mw:
+      type: number
+      description: "Grid load in MW"
