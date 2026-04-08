@@ -174,7 +174,7 @@ if __name__ == "__main__":
     print(f"  BESS-RL Evaluation  |  Seeds {eval_seeds[0]}-{eval_seeds[-1]}  (unseen)")
     print(f"{'='*60}\n")
     print("  NOTE: Ensure the OpenEnv server is already running:")
-    print("  > uvicorn bess_rl.openenv.server.app:app --port 8000")
+    print("  > uvicorn server.app:app --port 8000")
     print()
 
     client = OpenEnvClient(base_url="http://127.0.0.1:8000")

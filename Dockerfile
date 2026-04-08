@@ -1,37 +1,25 @@
-FROM python:3.13-slim
+FROM python:3.11-slim
 
-# Install uv binary
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+WORKDIR /app
 
-WORKDIR /app/bess_rl
-
-# Enable bytecode compilation
-ENV UV_COMPILE_BYTECODE=1
-# Copy from the cache instead of linking
-ENV UV_LINK_MODE=copy
-
-# System build tools + curl for healthchecks
+# Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc g++ curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install dependencies first for better caching
-# We copy only the files needed for dependency resolution
-COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-install-project --no-dev
+# Copy and install Python dependencies first (layer caching)
+COPY backend/requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy entire project
+# Copy the entire project
 COPY . .
 
-# Sync the project (installs the current package if applicable)
-RUN uv sync --frozen --no-dev --no-install-project
-
-# Ensure the app can find the bess_rl package and the venv
+# Set PYTHONPATH so all internal imports resolve correctly
+# The project root is /app, so 'import openenv...' etc. resolves
 ENV PYTHONPATH=/app
-ENV PATH="/app/bess_rl/.venv/bin:$PATH"
+ENV PORT=7860
 
-EXPOSE 8000
+EXPOSE 7860
 
-# Run the backend main script
-# Since WORKDIR is /app/bess_rl, we run backend/main.py
+# Run the unified FastAPI server directly
 CMD ["python", "backend/main.py"]

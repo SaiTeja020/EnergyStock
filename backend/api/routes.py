@@ -13,10 +13,10 @@ _ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
-from bess_rl.agent.config import AgentConfig
-from bess_rl.agent.actor_critic import SAC_Agent
-from bess_rl.openenv.server.env import BESSEnvironment
-from bess_rl.openenv.models import ActionModel
+from agent.config import AgentConfig
+from agent.actor_critic import SAC_Agent
+from server.env import BESSEnvironment
+from openenv.models import ActionModel
 
 router = APIRouter(prefix="/api", tags=["frontend"])
 
@@ -283,6 +283,6 @@ def evaluate(req: EvaluateRequest):
 
 @router.post("/llm-analyze", response_model=LLMAnalysisResponse)
 def llm_analyze(req: LLMAnalysisRequest):
-    from bess_rl.backend.api.llm_evaluator import get_llm_analysis
+    from backend.api.llm_evaluator import get_llm_analysis
     result = get_llm_analysis(req.evaluation.model_dump())
     return LLMAnalysisResponse(**result)

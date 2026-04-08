@@ -1,3 +1,13 @@
+---
+title: EnergyStock BESS-RL
+emoji: ⚡
+colorFrom: blue
+colorTo: green
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # ⚡ BESS-RL: Battery Energy Storage System RL Environment
 
 [![HF Space](https://img.shields.io/badge/🤗%20Space-EnergyStock-blue)](https://huggingface.co/spaces/saiteja020/EnergyStock)

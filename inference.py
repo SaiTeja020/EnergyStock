@@ -31,7 +31,7 @@ _ROOT = os.path.abspath(os.path.dirname(__file__))
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
-from openenv.server.env import BESSEnvironment
+from server.env import BESSEnvironment
 from openenv.models import ActionModel
 from agent.actor_critic import SAC_Agent
 from agent.config import AgentConfig
