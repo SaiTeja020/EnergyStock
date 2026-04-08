@@ -128,15 +128,15 @@ def _get_gemini_analysis(data: dict) -> dict:
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key: raise ValueError("GEMINI_API_KEY not set")
     
-    import google.generativeai as genai
-    genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(GEMINI_MODEL)
+    from google import genai
+    from google.genai import types
+    client = genai.Client(api_key=api_key)
     prompt = _build_prompt(data)
-    response = model.generate_content(
-        prompt,
-        generation_config=genai.types.GenerationConfig(
+    response = client.models.generate_content(
+        model=GEMINI_MODEL,
+        contents=prompt,
+        config=types.GenerateContentConfig(
             temperature=0.3,
-            # response_mime_type="application/json",  # Some regions don't support JSON mode yet
         ),
     )
     # Extract JSON string safely
