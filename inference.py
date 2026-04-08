@@ -39,6 +39,12 @@ from agent.config import AgentConfig
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
+try:
+    from dotenv import load_dotenv
+    load_dotenv(os.path.join(_ROOT, ".env"))
+except ImportError:
+    pass
+
 API_KEY       = os.getenv("HF_TOKEN") or os.getenv("API_KEY", "")
 API_BASE_URL  = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
 MODEL_NAME    = os.getenv("MODEL_NAME", "meta-llama/Llama-3.1-8B-Instruct")
