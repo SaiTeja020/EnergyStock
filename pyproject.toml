@@ -5,6 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "bess_rl"
 version = "1.0.0"
+requires-python = ">=3.13"
 description = "BESS-RL Platform Environment"
 authors = [{name = "Sai Teja", email = "test@example.com"}]
 dependencies = [

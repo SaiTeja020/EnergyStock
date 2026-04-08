@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 # Install uv binary
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
@@ -24,7 +24,7 @@ RUN uv sync --frozen --no-install-project --no-dev
 COPY . .
 
 # Sync the project (installs the current package if applicable)
-RUN uv sync --frozen --no-dev
+RUN uv sync --frozen --no-dev --no-install-project
 
 # Ensure the app can find the bess_rl package and the venv
 ENV PYTHONPATH=/app
