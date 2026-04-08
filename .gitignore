@@ -1,5 +1,7 @@
 
 .env
+# Temp validation results
+validation_output.tmp
 venv/
 temp/
 __pycache__/
